@@ -130,7 +130,10 @@ impl<'ll, 'tcx> ConstMethods<'tcx> for CodegenCx<'ll, 'tcx> {
     }
 
     fn const_int(&self, t: &'ll Type, i: i64) -> &'ll Value {
-        unsafe { llvm::LLVMConstInt(t, i as u64, True) }
+        unsafe {
+            dbg!(t);
+            llvm::LLVMConstInt(t, i as u64, True)
+        }
     }
 
     fn const_uint(&self, t: &'ll Type, i: u64) -> &'ll Value {
@@ -273,6 +276,11 @@ impl<'ll, 'tcx> ConstMethods<'tcx> for CodegenCx<'ll, 'tcx> {
                     GlobalAlloc::Static(def_id) => {
                         assert!(self.tcx.is_static(def_id));
                         assert!(!self.tcx.is_thread_local_static(def_id));
+                        // Here we do encounter a Foreign static.
+                        // The following lines run fine but the btf still does no contain BTF for the foreign static.
+                        // let g = self.get_static(def_id);
+                        // let attrs = self.tcx.codegen_fn_attrs(def_id);
+                        // crate::base::set_link_section(g, attrs);
                         (self.get_static(def_id), AddressSpace::DATA)
                     }
                 };

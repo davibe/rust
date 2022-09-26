@@ -28,6 +28,9 @@ impl<'a, 'tcx: 'a> MonoItemExt<'a, 'tcx> for MonoItem<'tcx> {
             cx.codegen_unit().name()
         );
 
+        // no foreign statics here
+        // dbg!("symbol {}", self.to_raw_string());
+
         match *self {
             MonoItem::Static(def_id) => {
                 cx.codegen_static(def_id, cx.tcx().is_mutable_static(def_id));
@@ -115,7 +118,7 @@ impl<'a, 'tcx: 'a> MonoItemExt<'a, 'tcx> for MonoItem<'tcx> {
 
         let symbol_name = self.symbol_name(cx.tcx()).name;
 
-        debug!("symbol {}", &symbol_name);
+        // dbg!("symbol {}", &symbol_name); // no foreign static here
 
         match *self {
             MonoItem::Static(def_id) => {

@@ -375,6 +375,9 @@ fn collect_roots(tcx: TyCtxt<'_>, mode: MonoItemCollectionMode) -> Vec<MonoItem<
 
         let crate_items = tcx.hir_crate_items(());
 
+        // hir contains foreign statics!, the output of this debug is nice
+        // dbg!(&crate_items);
+
         for id in crate_items.items() {
             collector.process_item(id);
         }

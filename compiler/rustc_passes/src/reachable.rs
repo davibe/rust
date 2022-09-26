@@ -279,6 +279,14 @@ impl<'tcx> ReachableContext<'tcx> {
             }) => {
                 self.visit_nested_body(body);
             }
+            // useless, does nothing
+            // Node::ForeignItem(a) => {
+            //     dbg!("AAAAAAAAAAAAAAAAAAAAA", a);
+            //     if let hir::ForeignItemKind::Static(b, _) = a.kind {
+            //         dbg!("BBBBBBBBBBB", b);
+            //         self.visit_nested_body(BodyId { hir_id: b.hir_id });
+            //     }
+            // }
             // Nothing to recurse on for these
             Node::ForeignItem(_)
             | Node::Variant(_)

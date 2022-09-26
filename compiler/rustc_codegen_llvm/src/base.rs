@@ -72,6 +72,7 @@ pub fn compile_codegen_unit(tcx: TyCtxt<'_>, cgu_name: Symbol) -> (ModuleCodegen
     // the time we needed for codegenning it.
     let cost = time_to_codegen.as_nanos() as u64;
 
+    // This function is not called for foreign / extern
     fn module_codegen(tcx: TyCtxt<'_>, cgu_name: Symbol) -> ModuleCodegen<ModuleLlvm> {
         let cgu = tcx.codegen_unit(cgu_name);
         let _prof_timer =
@@ -83,6 +84,9 @@ pub fn compile_codegen_unit(tcx: TyCtxt<'_>, cgu_name: Symbol) -> (ModuleCodegen
         let llvm_module = ModuleLlvm::new(tcx, cgu_name.as_str());
         {
             let cx = CodegenCx::new(tcx, cgu, &llvm_module);
+
+            // dbg!(cx.codegen_unit.items()); // does not contain foreign static
+
             let mono_items = cx.codegen_unit.items_in_deterministic_order(cx.tcx);
             for &(mono_item, (linkage, visibility)) in &mono_items {
                 mono_item.predefine::<Builder<'_, '_, '_>>(&cx, linkage, visibility);
@@ -141,7 +145,11 @@ pub fn compile_codegen_unit(tcx: TyCtxt<'_>, cgu_name: Symbol) -> (ModuleCodegen
 }
 
 pub fn set_link_section(llval: &Value, attrs: &CodegenFnAttrs) {
-    let Some(sect) = attrs.link_section else { return };
+    let Some(sect) = attrs.link_section else {
+        dbg!("NO LINK SECTION", llval, attrs. export_name);
+        return
+    };
+    dbg!("ACTUALLY GENERATING A SECTION", sect.as_str(), llval, attrs.export_name);
     unsafe {
         let buf = SmallCStr::new(sect.as_str());
         llvm::LLVMSetSection(llval, buf.as_ptr());

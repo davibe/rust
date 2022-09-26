@@ -135,6 +135,7 @@ impl<'tcx> Partitioner<'tcx> for DefaultPartitioning {
             for mono_item in reachable {
                 if let Some(linkage) = old_codegen_unit.items().get(&mono_item) {
                     // This is a root, just copy it over.
+                    // dbg!("insert", mono_item); // foreign static already missing here
                     new_codegen_unit.items_mut().insert(mono_item, *linkage);
                 } else {
                     if roots.contains(&mono_item) {
@@ -146,6 +147,7 @@ impl<'tcx> Partitioner<'tcx> for DefaultPartitioning {
                     }
 
                     // This is a CGU-private copy.
+                    // dbg!("insert", mono_item);
                     new_codegen_unit
                         .items_mut()
                         .insert(mono_item, (Linkage::Internal, Visibility::Default));
@@ -209,6 +211,7 @@ impl<'tcx> Partitioner<'tcx> for DefaultPartitioning {
             // could be accessed from.
             for cgu in &mut partitioning.codegen_units {
                 for candidate in &partitioning.internalization_candidates {
+                    // dbg!("insert", candidate);
                     cgu.items_mut().insert(*candidate, (Linkage::Internal, Visibility::Default));
                 }
             }

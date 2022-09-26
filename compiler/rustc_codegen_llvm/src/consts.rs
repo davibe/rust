@@ -1,4 +1,4 @@
-use crate::base;
+use crate::base::{self};
 use crate::common::{self, CodegenCx};
 use crate::debuginfo;
 use crate::llvm::{self, True};
@@ -208,7 +208,13 @@ fn check_and_apply_linkage<'ll, 'tcx>(
     } else {
         // Generate an external declaration.
         // FIXME(nagisa): investigate whether it can be changed into define_global
-        cx.declare_global(sym, llty)
+        let val = cx.declare_global(sym, llty);
+        // HACK to adjust linker section and output codeinfo
+        // FIXME: Should be done on the caller side ? need to understand better when get_static() is called
+        base::set_link_section(val, attrs);
+        debuginfo::build_global_var_di_node(cx, def_id, val);
+        val
+
     }
 }
 
@@ -285,6 +291,10 @@ impl<'ll> CodegenCx<'ll, '_> {
 
             g
         } else {
+            // foreign static goes trough here
+            // dbg!(&sym);
+            // let bt = std::backtrace::Backtrace::capture();
+            // println!("{}", bt);
             check_and_apply_linkage(self, fn_attrs, ty, sym, def_id)
         };
 
@@ -380,8 +390,10 @@ impl<'ll> StaticMethods for CodegenCx<'ll, '_> {
                 return;
             };
             let alloc = alloc.inner();
-
             let g = self.get_static(def_id);
+
+            // this function is never called for foreign statics :( but it's used for constants despite this is in StaticMethods
+            // dbg!("codegen_static", attrs.link_name, attrs.export_name, attrs.link_section, g);
 
             // boolean SSA values are i1, but they have to be stored in i8 slots,
             // otherwise some LLVM optimization passes don't work as expected
