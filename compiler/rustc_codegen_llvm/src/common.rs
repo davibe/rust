@@ -273,7 +273,10 @@ impl<'ll, 'tcx> ConstMethods<'tcx> for CodegenCx<'ll, 'tcx> {
                     GlobalAlloc::Static(def_id) => {
                         assert!(self.tcx.is_static(def_id));
                         assert!(!self.tcx.is_thread_local_static(def_id));
-                        (self.get_static(def_id), AddressSpace::DATA)
+                        let value = self.get_static(def_id);
+                        crate::base::set_link_section(value, self.tcx.codegen_fn_attrs(def_id));
+                        crate::debuginfo::build_global_var_di_node(self, def_id, value);
+                        (value, AddressSpace::DATA)
                     }
                 };
                 let llval = unsafe {
